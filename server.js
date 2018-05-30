@@ -13,12 +13,11 @@ app.get('/',function(req,res){
 
 server.lastPlayderID = 0;
 
-server.listen(process.env.PORT || 8081,function(){
+server.listen(process.env.PORT || 8080, function(){
     console.log('Listening on '+server.address().port);
 });
 
 io.on('connection',function(socket){
-
 
     socket.on('newplayer',function()
     {
