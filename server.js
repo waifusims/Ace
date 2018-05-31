@@ -19,35 +19,42 @@ server.listen(process.env.PORT || 8080, function(){
 
 io.on('connection',function(socket){
 
-    socket.on('newplayer',function()
+    socket.player =
     {
-        socket.player =
-        {
-            id: server.lastPlayderID++,
-            x: randomInt(100,400),
-            y: randomInt(100,400)
-        };
+        id: server.lastPlayderID++,
+        x: randomInt(100,400),
+        y: randomInt(100,400)
+    };
 
-        socket.emit('allplayers',getAllPlayers());
-        socket.broadcast.emit('allplayers',getAllPlayers());
-        //socket.broadcast.emit('newplayer',socket.player);
-    });
+    updateClients(socket);
 
     socket.on('click',function(data)
     {
-        console.log('click to '+data.x+', '+data.y);
-        socket.player.x = data.x;
-        socket.player.y = data.y;
-        //io.emit('move',socket.player);
-        socket.emit('allplayers',getAllPlayers());
-        socket.broadcast.emit('allplayers',getAllPlayers());
+        console.log(socket.id + ' - click: (' + data.x + ', ' + data.y + ")");
+
+        try
+        {
+            if(socket.player != undefined)
+            {
+                socket.player.x = data.x;
+                socket.player.y = data.y;
+            }
+            // else
+            // {
+            //     socket.disconnect();    
+            // }
+
+            updateClients(socket);
+        }
+        catch(e)
+        {
+            throw "player is dead (?) - " + e;
+        }
     });
 
     socket.on('disconnect',function()
     {
-        socket.emit('allplayers',getAllPlayers());
-        socket.broadcast.emit('allplayers',getAllPlayers());
-        //io.emit('remove',socket.player.id);
+        updateClients(socket);
     });
 
     socket.on('test',function()
@@ -58,12 +65,28 @@ io.on('connection',function(socket){
 
 module.exports = app;
 
-function getAllPlayers(){
-    var players = [];
-    Object.keys(io.sockets.connected).forEach(function(socketID){
+function getAllPlayers()
+{
+    var players = [];   
+
+    console.log("Connected Sockets: ");
+
+    Object.keys(io.sockets.connected).forEach(function(socketID)
+    {
+        console.log(socketID);
         var player = io.sockets.connected[socketID].player;
-        if(player) players.push(player);
+        
+        if(player)
+        {
+            console.log(socketID + ": player " + player.id);
+            players.push(player);
+        }
+        else
+        {
+            io.sockets.connected[socketID].disconnect();
+        }
     });
+
     return players;
 }
 
@@ -73,6 +96,8 @@ function randomInt (low, high) {
 
 function updateClients(socket)
 {
-    socket.emit('allplayers',getAllPlayers());
-    socket.broadcast.emit('allplayers',getAllPlayers());
+    // send current game state to client
+    var allPlayers = getAllPlayers();
+    socket.emit('allplayers', allPlayers);
+    socket.broadcast.emit('allplayers', allPlayers);
 }

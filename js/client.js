@@ -33,7 +33,6 @@ Game.create = function(){
     }
     layer.inputEnabled = true; // Allows clicking on the map ; it's enough to do it on the last layer
     layer.events.onInputUp.add(Game.getCoordinates, this);
-    Client.askNewPlayer();
 };
 
 // client
@@ -71,21 +70,9 @@ Client.sendTest = function(){
     Client.socket.emit('test');
 };
 
-Client.askNewPlayer = function(){
-    Client.socket.emit('newplayer');
-};
-
 Client.sendClick = function(x,y){
   Client.socket.emit('click',{x:x,y:y});
 };
-
-Client.socket.on('newplayer',function(data){
-    Game.addNewPlayer(data.id,data.x,data.y);
-});
-
-Client.socket.on('move',function(data){
-    Game.movePlayer(data.id,data.x,data.y);
-});
 
 Client.socket.on('remove',function(id){
     Game.removePlayer(id);
@@ -97,11 +84,6 @@ Client.socket.on('allplayers',function(data){
 
 function updatePlayers(allPlayers)
 {
-    // Game.playerMap.forEach(function(p)
-    // {
-    //     p.Destroy();
-    // });
-
     Object.keys(Game.playerMap).forEach(function(socketID){
         Game.playerMap[socketID].destroy();
     });
@@ -112,4 +94,11 @@ function updatePlayers(allPlayers)
     {
         Game.addNewPlayer(allPlayers[i].id,allPlayers[i].x,allPlayers[i].y);
     }
+}
+
+function please()
+{        
+    Client.socket.emit('test');
+
+    console.log("FFFFFFFFFFFFFFUCK");
 }
